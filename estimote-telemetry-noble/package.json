@@ -1,0 +1,15 @@
+{
+  "name": "estimote-telemetry-noble",
+  "version": "0.0.1",
+  "description": "Example code using `noble` to scan for and parse Estimote Telemetry packets",
+  "main": "scan.js",
+  "dependencies": {
+    "noble": "^1.6.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Piotr Krawiec <piotr@estimote.com>",
+  "license": "MIT"
+}
