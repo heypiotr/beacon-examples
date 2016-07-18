@@ -28,8 +28,10 @@ noble.on('discover', function(peripheral) {
   var frameType = data.readUInt8(0) & 0b00001111;
   if (frameType != ESTIMOTE_FRAME_TYPE_TELEMETRY) { return; }
 
-  var protocolVersion = data.readUInt8(0) & 0b11110000;
-  if (protocolVersion != 0) { return; }
+  var protocolVersion = (data.readUInt8(0) & 0b11110000) >> 4;
+  // firmware version 4.5.0 and later broadcast protocol version 0
+  // for firmware version >= 4.0.0 && < 4.5.0, use protocol version 1
+  if (protocolVersion != 1) { return; }
 
   var shortIdentifier = data.toString('hex', 1, 9);
 
