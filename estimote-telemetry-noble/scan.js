@@ -91,6 +91,7 @@ noble.on('discover', function(peripheral) {
         unit = 'days';
       } else {
         unit = 'weeks';
+        number = number - 32;
       }
       return {number: number, unit: unit};
     }
