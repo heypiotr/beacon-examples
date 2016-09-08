@@ -31,14 +31,15 @@ noble.on('discover', function(peripheral) {
   var frameType = data.readUInt8(0) & 0b00001111;
   if (frameType != ESTIMOTE_FRAME_TYPE_TELEMETRY) { return; }
 
-  // byte 0, upper 4 bits => Telemetry protocol version
+  // byte 0, upper 4 bits => Telemetry protocol version ("0", "1", "2", etc.)
   var protocolVersion = (data.readUInt8(0) & 0b11110000) >> 4;
 
   // bytes 1, 2, 3, 4, 5, 6, 7, 8 => first half of the identifier of the beacon
   var shortIdentifier = data.toString('hex', 1, 9);
 
   // byte 9, lower 2 bits => Telemetry subframe type
-  // to fit all the telemetry data, we currently use two packets, "A" and "B"
+  // to fit all the telemetry data, we currently use two packets, "A" (i.e., "0")
+  // and "B" (i.e., "1")
   var subFrameType = data.readUInt8(9) & 0b00000011;
 
   // ****************
@@ -116,7 +117,8 @@ noble.on('discover', function(peripheral) {
       // in protocol version "2"
       // byte 15, bits 2 & 3 => error codes
       // bit 2 = firmware error
-      // bit 3 = Real-Time Clock error
+      // bit 3 = clock error (likely, in beacons without Real-Time Clock, e.g.,
+      //                      Proximity Beacons, the internal clock is out of sync)
       errors = {
         hasFirmwareError: ((data.readUInt8(15) & 0b00000100) >> 2) == 1,
         hasClockError: ((data.readUInt8(15) & 0b00001000) >> 3) == 1
@@ -125,7 +127,7 @@ noble.on('discover', function(peripheral) {
       // in protocol version "1"
       // byte 16, lower 2 bits => error codes
       // bit 0 = firmware error
-      // bit 1 = Real-Time Clock error
+      // bit 1 = clock error
       errors = {
         hasFirmwareError: (data.readUInt8(16) & 0b00000001) == 1,
         hasClockError: ((data.readUInt8(16) & 0b00000010) >> 1) == 1
