@@ -163,10 +163,10 @@ function parseEstimoteTelemetryPacket(data) { // data is a 0-indexed byte array/
     // ***** AMBIENT LIGHT
     // byte 13 => ambient light level RAW_VALUE
     // the RAW_VALUE byte is split into two halves
-    // pow(RAW_VALUE_UPPER_HALF, 2) * RAW_VALUE_LOWER_HALF * 0.72 = light level in lux (lx)
+    // pow(2, RAW_VALUE_UPPER_HALF) * RAW_VALUE_LOWER_HALF * 0.72 = light level in lux (lx)
     var ambientLightUpper = (data.readUInt8(13) & 0b11110000) >> 4;
     var ambientLightLower = data.readUInt8(13) & 0b00001111;
-    var ambientLightLevel = Math.pow(ambientLightUpper, 2) * ambientLightLower * 0.72;
+    var ambientLightLevel = Math.pow(2, ambientLightUpper) * ambientLightLower * 0.72;
 
     // ***** BEACON UPTIME
     // byte 14 + 6 lower bits of byte 15 (i.e., 14 bits total)
