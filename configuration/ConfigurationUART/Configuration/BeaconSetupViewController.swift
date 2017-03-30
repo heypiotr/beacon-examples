@@ -45,7 +45,7 @@ class BeaconSetupViewController: UIViewController, GeoLocatorDelegate {
 //    @IBOutlet weak var geoLocationLabel: UILabel!
 //    @IBOutlet weak var geoLocationSpinner: UIActivityIndicatorView!
 
-    @IBAction func handleTapGesture(sender: UITapGestureRecognizer) {
+    @IBAction func handleTapGesture(_ sender: UITapGestureRecognizer) {
         view.endEditing(true)
     }
 
@@ -72,10 +72,10 @@ class BeaconSetupViewController: UIViewController, GeoLocatorDelegate {
     }
 
     deinit {
-        NSNotificationCenter.defaultCenter().removeObserver(appBecomeActiveObserver)
+        NotificationCenter.default.removeObserver(appBecomeActiveObserver)
     }
 
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
         beaconIDLabel.text = beacon.identifier
@@ -99,36 +99,36 @@ class BeaconSetupViewController: UIViewController, GeoLocatorDelegate {
 
     // MARK: Navigation
 
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "PerformSetup" {
-            let setupVC = segue.destinationViewController as! PerformSetupViewController
+            let setupVC = segue.destination as! PerformSetupViewController
             setupVC.beacon = beacon
             setupVC.beaconConfig = createConfig()
         } else if segue.identifier == "ShowTagsPicker" {
-            let tagsVC = (segue.destinationViewController as! UINavigationController).topViewController as! TagsViewController
+            let tagsVC = (segue.destination as! UINavigationController).topViewController as! TagsViewController
             tagsVC.selectedTag = selectedTag
         } else if segue.identifier == "CancelSetup" {
             beacon.disconnect()
         }
     }
 
-    @IBAction func backToBeaconSetup(segue: UIStoryboardSegue) {
+    @IBAction func backToBeaconSetup(_ segue: UIStoryboardSegue) {
         if segue.identifier == "SaveTags" {
-            let tagsVC = segue.sourceViewController as! TagsViewController
+            let tagsVC = segue.source as! TagsViewController
             selectedTag = tagsVC.selectedTag
         }
     }
 
     // MARK: GeoLocator delegate
 
-    func geoLocator(geoLocator: GeoLocator, didDetermineLocation location: CLLocation) {
+    func geoLocator(_ geoLocator: GeoLocator, didDetermineLocation location: CLLocation) {
 //        geoLocation = location
 //
 //        geoLocationLabel.text = String(format: "%.2f, %.2f, ± %.0f m", geoLocation!.coordinate.latitude, geoLocation!.coordinate.longitude, geoLocation!.horizontalAccuracy)
 //        geoLocationSpinner.stopAnimating()
     }
 
-    func geoLocator(geoLocator: GeoLocator, didFailWithError error: GeoLocatorError) {
+    func geoLocator(_ geoLocator: GeoLocator, didFailWithError error: GeoLocatorError) {
 //        switch error {
 //        case .NoLocationFound:
 //            let alert = UIAlertController(title: "Couldn't obtain geolocation", message: "Try moving to a slightly different spot, for better GPS or WiFi coverage.", preferredStyle: .Alert)

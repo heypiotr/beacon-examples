@@ -20,13 +20,13 @@ struct BeaconConfig {
 }
 
 enum Placement: Int {
-    case OpenArea, ShortAisle, LongAisle
+    case openArea, shortAisle, longAisle
 
     var powerLevel: ESTIBeaconPower {
         switch self {
-        case .OpenArea:   return .Level2
-        case .ShortAisle: return .Level2
-        case .LongAisle:  return .Level3
+        case .openArea:   return .level2
+        case .shortAisle: return .level2
+        case .longAisle:  return .level3
         }
     }
 }
@@ -45,7 +45,7 @@ let tagsAndMajorsMapping: [String: UInt16] = [
 /**
  This function is meant to return an array of settings to write to the beacon. It takes `BeaconConfig` as its input parameter to allow customizing some hardware settings in response to the beacon configuration. For example, you might want all your beacons to be set to a certain UUID, but vary their major number based on the tag picked by the user.
  */
-func beaconSettingsForConfig(config: BeaconConfig) -> [ESTSettingReadWrite] {
+func beaconSettingsForConfig(_ config: BeaconConfig) -> [ESTSettingReadWrite] {
     return [
         ESTSettingGPIOConfigPort0(value: .UART)!,
         ESTSettingGPIOConfigPort1(value: .UART)!

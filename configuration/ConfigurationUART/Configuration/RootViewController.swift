@@ -6,7 +6,7 @@ import UIKit
 import SwiftState
 
 enum ScanningState: StateType {
-    case Initial, Stopped, Scanning, Connecting, Error
+    case initial, stopped, scanning, connecting, error
 }
 
 struct ErrorMessage {
@@ -39,40 +39,40 @@ class RootViewController: UIViewController, ImmediateBeaconDetectorDelegate, EST
 
         self.immediateBeaconDetector = ImmediateBeaconDetector(delegate: self)
 
-        machine = StateMachine<ScanningState, NoEvent>(state: .Initial) { machine in
-            machine.addRoute(.Any => .Scanning) { context in
+        machine = StateMachine<ScanningState, NoEvent>(state: .initial) { machine in
+            machine.addRoute(.any => .scanning) { context in
                 self.statusLabel.text = "Scanning for beacons..."
 
-                self.restartButton.hidden = true
-                self.activityIndicator.hidden = false
+                self.restartButton.isHidden = true
+                self.activityIndicator.isHidden = false
 
                 self.immediateBeaconDetector.start()
             }
 
-            machine.addRoute(.Scanning => .Connecting) { context in
+            machine.addRoute(.scanning => .connecting) { context in
                 self.statusLabel.text = "Connecting to beacon..."
 
                 self.immediateBeaconDetector.stop()
             }
 
-            machine.addRoute(.Any => .Stopped) { context in
+            machine.addRoute(.any => .stopped) { context in
                 self.statusLabel.text = (context.userInfo as? String) ?? "Scanning stopped."
 
-                self.restartButton.hidden = false
-                self.activityIndicator.hidden = true
+                self.restartButton.isHidden = false
+                self.activityIndicator.isHidden = true
 
                 self.immediateBeaconDetector.stop()
             }
 
-            machine.addRoute(.Any => .Error) { context in
+            machine.addRoute(.any => .error) { context in
                 let errorMessage = context.userInfo as! ErrorMessage
 
-                let alert = UIAlertController(title: errorMessage.title, message: errorMessage.message, preferredStyle: .Alert)
-                let action = UIAlertAction(title: "OK", style: .Default, handler: nil)
+                let alert = UIAlertController(title: errorMessage.title, message: errorMessage.message, preferredStyle: .alert)
+                let action = UIAlertAction(title: "OK", style: .default, handler: nil)
                 alert.addAction(action)
-                self.presentViewController(alert, animated: true, completion: nil)
+                self.present(alert, animated: true, completion: nil)
 
-                machine <- .Stopped
+                machine <- .stopped
             }
 
             machine.addErrorHandler { event, fromState, toState, userInfo in
@@ -81,49 +81,49 @@ class RootViewController: UIViewController, ImmediateBeaconDetectorDelegate, EST
         }
     }
 
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
-        machine <- .Scanning
+        machine <- .scanning
     }
 
-    override func viewDidDisappear(animated: Bool) {
+    override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
 
-        machine <- .Stopped
+        machine <- .stopped
     }
 
-    @IBAction func restartScanning(sender: AnyObject) {
-        machine <- .Scanning
+    @IBAction func restartScanning(_ sender: AnyObject) {
+        machine <- .scanning
     }
 
     // MARK: Navigation
 
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        let navigationVC = segue.destinationViewController as! UINavigationController
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let navigationVC = segue.destination as! UINavigationController
         let beaconSetupVC = navigationVC.topViewController as! BeaconSetupViewController
         beaconSetupVC.beacon = immediateBeacon
     }
 
-    @IBAction func backToScanning(segue: UIStoryboardSegue) {
+    @IBAction func backToScanning(_ segue: UIStoryboardSegue) {
     }
 
     // MARK: Immediate Beacon Detector
 
-    func immediateBeaconDetector(immediateBeaconDetector: ImmediateBeaconDetector, didDiscoverBeacon beacon: ESTDeviceLocationBeacon) {
-        machine <- .Connecting
+    func immediateBeaconDetector(_ immediateBeaconDetector: ImmediateBeaconDetector, didDiscoverBeacon beacon: ESTDeviceLocationBeacon) {
+        machine <- .connecting
 
         immediateBeacon = beacon
         immediateBeacon.delegate = self
         immediateBeacon.connect()
     }
 
-    func immediateBeaconDetector(immediateBeaconDetector: ImmediateBeaconDetector, didFailDiscovery error: ImmediateBeaconDetectorError) {
+    func immediateBeaconDetector(_ immediateBeaconDetector: ImmediateBeaconDetector, didFailDiscovery error: ImmediateBeaconDetectorError) {
         switch error {
-        case .BluetoothDisabled:
-            machine <- (.Stopped, "Turn Bluetooth on.")
+        case .bluetoothDisabled:
+            machine <- (.stopped, "Turn Bluetooth on.")
         default:
-            machine <- (.Error, ErrorMessage(title: "There was a problem scanning for beacons", message: "Try starting scanning again. If the problem persists, try turning Bluetooth off, then on again."))
+            machine <- (.error, ErrorMessage(title: "There was a problem scanning for beacons", message: "Try starting scanning again. If the problem persists, try turning Bluetooth off, then on again."))
         }
     }
 
@@ -140,31 +140,31 @@ class RootViewController: UIViewController, ImmediateBeaconDetectorDelegate, EST
         }
     }
 
-    func estDeviceConnectionDidSucceed(device: ESTDeviceConnectable) {
+    func estDeviceConnectionDidSucceed(_ device: ESTDeviceConnectable) {
         connectionRetries = 0
 
         immediateBeacon.delegate = nil
 
-        performSegueWithIdentifier("ShowBeaconSetup", sender: self)
+        performSegue(withIdentifier: "ShowBeaconSetup", sender: self)
     }
 
-    func estDevice(device: ESTDeviceConnectable, didFailConnectionWithError error: NSError) {
-        if error.code == ESTDeviceLocationBeaconError.CloudVerificationFailed.rawValue {
+    func estDevice(_ device: ESTDeviceConnectable, didFailConnectionWithError error: Error) {
+        if error._code == ESTDeviceLocationBeaconError.cloudVerificationFailed.rawValue {
             if estimoteCloudReachable() {
-                machine <- (.Error, ErrorMessage(title: "Couldn't connect to beacon", message: "Beacon ownership verification failed. Try again, and if the problem persists, set this beacon aside and try another one."))
+                machine <- (.error, ErrorMessage(title: "Couldn't connect to beacon", message: "Beacon ownership verification failed. Try again, and if the problem persists, set this beacon aside and try another one."))
             } else {
-                machine <- (.Error, ErrorMessage(title: "Couldn't connect to beacon", message: "Couldn't reach Estimote Cloud. Check your Internet connection, then try again."))
+                machine <- (.error, ErrorMessage(title: "Couldn't connect to beacon", message: "Couldn't reach Estimote Cloud. Check your Internet connection, then try again."))
             }
         } else {
             if !retryConnection() {
-                machine <- (.Error, ErrorMessage(title: "Couldn't connect to beacon", message: "Try again. If the problem persists, try restarting Bluetooth. If that doesn't help either, set this beacon aside and try another one. [Code \(error.code)]"))
+                machine <- (.error, ErrorMessage(title: "Couldn't connect to beacon", message: "Try again. If the problem persists, try restarting Bluetooth. If that doesn't help either, set this beacon aside and try another one. [Code \(error._code)]"))
             }
         }
     }
 
-    func estDevice(device: ESTDeviceConnectable, didDisconnectWithError error: NSError?) {
+    func estDevice(_ device: ESTDeviceConnectable, didDisconnectWithError error: Error?) {
         if !retryConnection() {
-            machine <- (.Error, ErrorMessage(title: "Beacon disconnected while connecting", message: "Try again. If the problem persists, try restarting Bluetooth. If that doesn't help either, set this beacon aside and try another one."))
+            machine <- (.error, ErrorMessage(title: "Beacon disconnected while connecting", message: "Try again. If the problem persists, try restarting Bluetooth. If that doesn't help either, set this beacon aside and try another one."))
         }
 
     }
